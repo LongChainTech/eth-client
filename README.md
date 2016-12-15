@@ -15,7 +15,7 @@
     var account = new ethClient.Account(BaseUrl);
     var contract = new ethClient.AltExecCnsContract(account);
 
-    contract.call(password,CnsAddress,ContractName, FunctionName, [ Args ], ABI, callback);
+    contract.call(password, CnsAddress, ContractName, FunctionName, [ Args ], ABI, callback);
 
 ## License
     Copyright 2016 GMO Internet, Inc
