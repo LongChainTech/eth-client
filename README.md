@@ -18,7 +18,7 @@
     contract.call(password, CnsAddress, ContractName, FunctionName, [ Args ], ABI, callback);
 
 ## License
-    Copyright 2016 GMO Internet, Inc
+    Copyright 2016 GMO Internet, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

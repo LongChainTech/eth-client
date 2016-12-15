@@ -1,6 +1,6 @@
 {
   "name": "eth-client",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "support library for Z.com Clound BlockChain and ConoHa BlockChain",
   "main": "index.js",
   "directories": {
@@ -19,7 +19,7 @@
     "blockchain",
     "ethereum"
   ],
-  "author": "GMO Internet, Inc",
+  "author": "GMO Internet, Inc.",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/gmo-blockchain/eth-client/issues"
