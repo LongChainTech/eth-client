@@ -12,10 +12,10 @@
     </html>
 
 ### Usage
-    var account = new ethClient.Account( _BASE URL_ );
+    var account = new ethClient.Account(BaseUrl);
     var contract = new ethClient.AltExecCnsContract(account);
 
-    contract.call( _password_ ,  _CNS Address_ ,  _Contract Name_,  _Function Name_ , [  _Args_  ],  _ABI_ , callback);
+    contract.call(password,CnsAddress,ContractName, FunctionName, [ Args ], ABI, callback);
 
 ## License
     Copyright 2016 GMO Internet, Inc
