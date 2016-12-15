@@ -1,0 +1,44 @@
+{
+  "name": "eth-client",
+  "version": "0.0.6",
+  "description": "support library for Z.com Clound BlockChain and ConoHa BlockChain",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "build": "browserify index.js -o dist/eth-client.js --s ethClient -g [ babelify --presets [ es2015 ] ] -p [ licensify --includePrivate ]",
+    "minify": "uglifyjs dist/eth-client.js -c --comments=@license > dist/eth-client.min.js",
+    "build-dev": "watchify index.js -o dist/bundle.js --s ethClient -g [ babelify --presets [ es2015 ] ] -v"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gmo-blockchain/eth-client.git"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum"
+  ],
+  "author": "GMO Internet, Inc",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/gmo-blockchain/eth-client/issues"
+  },
+  "homepage": "https://github.com/gmo-blockchain/eth-client#readme",
+  "dependencies": {
+    "browserify": "^13.1.1",
+    "eth-lightwallet": "^2.5.3",
+    "ethereumjs-util": "^5.0.1",
+    "keccakjs": "^0.2.1",
+    "superagent": "^3.3.0",
+    "web3": "^0.17.0-beta"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.18.0",
+    "babelify": "^7.3.0",
+    "envify": "^4.0.0",
+    "licensify": "^3.1.2",
+    "uglify-js": "^2.7.5",
+    "watchify": "^3.8.0"
+  }
+}
