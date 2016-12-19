@@ -12,10 +12,13 @@
     </html>
 
 ### Usage
-    var account = new ethClient.Account(BaseUrl);
-    var contract = new ethClient.AltExecCnsContract(account);
+    ethClient.Account.create(baseUrl, $('#password').val(), function(err, _account) {
+            account = _account;
+            new ethClient.AltExecCnsContract(account, cnsAddress);
+        }
+    });
 
-    contract.call(password, CnsAddress, ContractName, FunctionName, [ Args ], ABI, callback);
+    contract.call(password, ContractName, FunctionName, [ Args ], ABI, callback);
 
 ## License
     Copyright 2016 GMO Internet, Inc.
