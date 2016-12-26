@@ -6,7 +6,7 @@
  *   license: Apache-2.0 (http://opensource.org/licenses/Apache-2.0)
  *   author: GMO Internet, Inc.
  *   homepage: https://github.com/gmo-blockchain/eth-client#readme
- *   version: 0.1.0
+ *   version: 0.1.2
  *
  * asn1.js:
  *   license: MIT (http://opensource.org/licenses/MIT)
@@ -436,7 +436,7 @@
  *   maintainers: defunctzombie <shtylman@gmail.com>, kof <oleg008@gmail.com>, kornel <pornel@pornel.net>, naman34 <naman34@gmail.com>, nw <nw@nwhite.net>, rauchg <rauchg@gmail.com>, superjoe <superjoe30@gmail.com>, tjholowaychuk <tj@vision-media.ca>, travisjeffery <tj@travisjeffery.com>, yields <yields@icloud.com>
  *   contributors: Kornel Lesiński <kornel@geekhood.net>, Peter Lyons <pete@peterlyons.com>, Hunter Loftis <hunter@hunterloftis.com>
  *   homepage: https://github.com/visionmedia/superagent#readme
- *   version: 3.3.0
+ *   version: 3.3.1
  *
  * tweetnacl:
  *   license: CC0-1.0 (http://creativecommons.org/publicdomain/zero/1.0/)
@@ -549,7 +549,6 @@ var Account = function Account(baseUrl, keystore) {
     if (!baseUrl) throw 'do not set base url';
     if (!keystore) throw 'do not set keystore';
 
-    if (baseUrl.slice(-1) === '/') baseUrl.substr;
     this.baseUrl = baseUrl.slice(-1) === '/' ? baseUrl.slice(0, -1) : baseUrl;
     this.keystore = keystore;
 };
@@ -580,6 +579,10 @@ Account.deserialize = function (serializedAccount) {
     var keystore = lightwallet.keystore.deserialize(jsonAccount.keystore);
     var baseUrl = jsonAccount.baseUrl;
     return new Account(baseUrl, keystore);
+};
+
+Account.prototype.changeBaseUrl = function (baseUrl) {
+    this.baseUrl = baseUrl.slice(-1) === '/' ? baseUrl.slice(0, -1) : baseUrl;
 };
 
 Account.prototype.getAddress = function () {
@@ -645,6 +648,7 @@ var utils = require('./utils'),
     AltExecCnsParams = require('./alt-exec-cns-params'),
     request = require('superagent'),
     Account = require('./account');
+var MAX_FILE_SIZE = 20 * 1000 * 1000;
 
 var AltExecCnsContract = function AltExecCnsContract(account, cnsAddress) {
     this.account = account;
@@ -655,7 +659,11 @@ var requestPostTransaction = function requestPostTransaction(baseUrl, input, sig
     return new Promise(function (resolve, reject) {
         request.post(baseUrl + '/alt/cns/transaction').send({ input: input, sign: sign }).end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve(res.body.txHash);
             }
@@ -667,7 +675,11 @@ var requestGetCall = function requestGetCall(baseUrl, input, sign) {
     return new Promise(function (resolve, reject) {
         request.get(baseUrl + '/alt/cns/call').query({ input: input, sign: sign }).end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve(res.body.result);
             }
@@ -679,7 +691,27 @@ var requestPostData = function requestPostData(baseUrl, input, sign, data) {
     return new Promise(function (resolve, reject) {
         request.post(baseUrl + '/alt/cns/data').send({ input: input, data: data, sign: sign }).end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
+            } else {
+                resolve(res.body.txHash);
+            }
+        });
+    });
+};
+
+var requestPutData = function requestPutData(baseUrl, input, sign, data) {
+    return new Promise(function (resolve, reject) {
+        request.put(baseUrl + '/alt/cns/data').send({ input: input, data: data, sign: sign }).end(function (err, res) {
+            if (err) {
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve(res.body.txHash);
             }
@@ -691,7 +723,11 @@ var requestGetData = function requestGetData(baseUrl, input, sign) {
     return new Promise(function (resolve, reject) {
         request.get(baseUrl + '/alt/cns/data').query({ input: input, sign: sign }).end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve(res.body.result);
             }
@@ -703,7 +739,27 @@ var requestPostFile = function requestPostFile(baseUrl, input, sign, data, file)
     return new Promise(function (resolve, reject) {
         request.post(baseUrl + '/alt/cns/file').attach(file.name, file).field('input', JSON.stringify(input)).field('sign', sign).field('data', data).end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
+            } else {
+                resolve(res.body.txHash);
+            }
+        });
+    });
+};
+
+var requestPutFile = function requestPutFile(baseUrl, input, sign, file) {
+    return new Promise(function (resolve, reject) {
+        request.put(baseUrl + '/alt/cns/file').attach(file.name, file).field('input', JSON.stringify(input)).field('sign', sign).end(function (err, res) {
+            if (err) {
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve(res.body.txHash);
             }
@@ -715,10 +771,15 @@ var requestGetFile = function requestGetFile(baseUrl, input, sign) {
     return new Promise(function (resolve, reject) {
         request.get(baseUrl + '/alt/cns/file').query({ input: input, sign: sign }).responseType('blob').end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 var fileName = res.header['content-disposition'].match(new RegExp('filename=\"(.+)\"'))[1];
-                var file = new File([res.xhr.response], fileName);
+                var type = res.header['content-type'];
+                var file = new File([res.xhr.response], fileName, { type: type });
                 resolve(file);
             }
         });
@@ -729,7 +790,11 @@ var requestGetTransactionReceipt = function requestGetTransactionReceipt(baseUrl
     return new Promise(function (resolve, reject) {
         request.get(baseUrl + '/alt/cns/transactionReceipt/' + txHash).end(function (err, res) {
             if (err) {
-                reject(err);
+                if (res && res.body && res.body.code === 1) {
+                    reject(err.body.message);
+                } else {
+                    reject(err);
+                }
             } else {
                 resolve(res.body.result);
             }
@@ -863,7 +928,7 @@ AltExecCnsContract.prototype.sendData = function (password, contractName, functi
     }
 };
 
-AltExecCnsContract.prototype.getFile = function (password, contractName, functionName, params, abi, callback) {
+AltExecCnsContract.prototype.updateData = function (password, contractName, functionName, objectId, data, params, abi, callback) {
     var _this6 = this;
 
     try {
@@ -874,6 +939,39 @@ AltExecCnsContract.prototype.getFile = function (password, contractName, functio
             var keystore = _this6.account.keystore;
             var cnsAddress = _this6.cnsAddress;
             var from = _this6.account.getAddress();
+            var dataHash = ethUtil.addHexPrefix(utils.hash(data));
+
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+
+            altParams.setObject(objectId, dataHash);
+            altParams.setTypesFromAbi(abi);
+            var hash = altParams.getHashedParams();
+            var input = altParams.getInput();
+
+            _this6.account.sign(password, hash).then(function (sign) {
+                return requestPutData(url, input, sign, data);
+            }).then(function (result) {
+                callback(null, result);
+            }).catch(function (err) {
+                callback(err);
+            });
+        })();
+    } catch (err) {
+        callback(err);
+    }
+};
+
+AltExecCnsContract.prototype.getFile = function (password, contractName, functionName, params, abi, callback) {
+    var _this7 = this;
+
+    try {
+        var altParams;
+
+        (function () {
+            var url = _this7.account.baseUrl;
+            var keystore = _this7.account.keystore;
+            var cnsAddress = _this7.cnsAddress;
+            var from = _this7.account.getAddress();
 
             altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
 
@@ -881,7 +979,7 @@ AltExecCnsContract.prototype.getFile = function (password, contractName, functio
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
-            _this6.account.sign(password, hash).then(function (sign) {
+            _this7.account.sign(password, hash).then(function (sign) {
                 return requestGetFile(url, input, sign);
             }).then(function (file) {
                 callback(null, file);
@@ -895,7 +993,7 @@ AltExecCnsContract.prototype.getFile = function (password, contractName, functio
 };
 
 AltExecCnsContract.prototype.sendFile = function (password, contractName, functionName, objectId, data, file, params, abi, callback) {
-    var _this7 = this;
+    var _this8 = this;
 
     try {
         var _this;
@@ -903,12 +1001,13 @@ AltExecCnsContract.prototype.sendFile = function (password, contractName, functi
         var altParams;
 
         (function () {
-            _this = _this7;
+            if (file.size > MAX_FILE_SIZE) throw 'file is too large';
+            _this = _this8;
 
-            var url = _this7.account.baseUrl;
-            var keystore = _this7.account.keystore;
-            var cnsAddress = _this7.cnsAddress;
-            var from = _this7.account.getAddress();
+            var url = _this8.account.baseUrl;
+            var keystore = _this8.account.keystore;
+            var cnsAddress = _this8.cnsAddress;
+            var from = _this8.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
 
             altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
@@ -923,6 +1022,46 @@ AltExecCnsContract.prototype.sendFile = function (password, contractName, functi
             }).then(function (sign) {
                 var input = altParams.getInput();
                 return requestPostFile(url, input, sign, data, file);
+            }).then(function (result) {
+                callback(null, result);
+            }).catch(function (err) {
+                callback(err);
+            });
+        })();
+    } catch (err) {
+        callback(err);
+    }
+};
+
+AltExecCnsContract.prototype.updateFile = function (password, contractName, functionName, objectId, file, params, abi, callback) {
+    var _this9 = this;
+
+    try {
+        var _this;
+
+        var altParams;
+
+        (function () {
+            if (file.size > MAX_FILE_SIZE) throw 'file is too large';
+            _this = _this9;
+
+            var url = _this9.account.baseUrl;
+            var keystore = _this9.account.keystore;
+            var cnsAddress = _this9.cnsAddress;
+            var from = _this9.account.getAddress();
+
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+
+
+            utils.hashFile(file).then(function (fileHash) {
+                altParams.setObject(objectId, null, ethUtil.addHexPrefix(fileHash));
+                altParams.setTypesFromAbi(abi);
+                return Promise.resolve(altParams.getHashedParams());
+            }).then(function (hash) {
+                return _this.account.sign(password, hash);
+            }).then(function (sign) {
+                var input = altParams.getInput();
+                return requestPutFile(url, input, sign, file);
             }).then(function (result) {
                 callback(null, result);
             }).catch(function (err) {
@@ -994,9 +1133,10 @@ AltExecCnsParams.prototype.setSign = function (sign) {
 };
 
 AltExecCnsParams.prototype.setObject = function (objectId, dataHash, fileHash) {
+    if (!(dataHash || fileHash)) throw 'no datHash or fileHash';
     this.objectParams[0] = ethUtil.addHexPrefix(coder.encodeParam('bytes32', objectId));
     this.objectParams[1] = dataHash;
-    if (fileHash) this.objectParams[2] = fileHash;
+    this.objectParams[2] = fileHash;
 };
 
 AltExecCnsParams.prototype.setTypesFromAbi = function (abi) {
@@ -1016,7 +1156,9 @@ AltExecCnsParams.prototype.getEncodedData = function () {
     var params = this.optionalParams;
     if (!this.constant) {
         params = [this.sign];
-        if (this.objectParams.length > 1) params = params.concat(this.objectParams);
+        this.objectParams.map(function (p) {
+            if (p) params.push(p);
+        });
         params = params.concat(this.optionalParams);
     }
     if (params.length !== types.length) throw 'invalid params';
@@ -1028,9 +1170,9 @@ AltExecCnsParams.prototype.getHashedParams = function () {
     if (!this.types) throw 'type is not set';
 
     var params = this.envParams;
-    if (this.objectParams.length > 1) {
-        params = params.concat(this.objectParams);
-    }
+    this.objectParams.map(function (p) {
+        if (p) params.push(p);
+    });
     params = params.concat(this.optionalParams);
 
     var types = envTypes;
@@ -1048,9 +1190,9 @@ AltExecCnsParams.prototype.recoverAddress = function (req) {
 
     var hash = this.getHashedParams();
     var params = this.envParams;
-    if (this.objectParams.length == 2) {
-        params = params.concat(this.objectParams);
-    }
+    this.objectParams.map(function (p) {
+        if (p) params.push(p);
+    });
     params = params.concat(this.optionalParams);
 
     this.from = utils.recoverAddress(hash, this.sign);
@@ -1068,11 +1210,9 @@ AltExecCnsParams.prototype.getInput = function () {
     input.contractName = this.envParams[1];
     input.functionName = this.envParams[2];
     input.params = this.optionalParams;
-    if (this.objectParams.length > 1) {
-        input.objectId = this.objectParams[0];
-        input.dataHash = this.objectParams[1];
-        if (this.objectParams.length == 3) input.fileHash = this.objectParams[2];
-    }
+    input.objectId = this.objectParams[0];
+    if (this.objectParams[1]) input.dataHash = this.objectParams[1];
+    if (this.objectParams[2]) input.fileHash = this.objectParams[2];
     return input;
 };
 
@@ -1239,6 +1379,10 @@ Utils.hashFile = function (file) {
         };
         loadNext();
     });
+};
+
+Utils.getZero = function () {
+    return '0x0000000000000000000000000000000000000000000000000000000000000000';
 };
 
 module.exports = Utils;

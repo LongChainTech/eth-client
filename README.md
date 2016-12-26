@@ -12,11 +12,10 @@
     </html>
 
 ### Usage
-    ethClient.Account.create(baseUrl, $('#password').val(), function(err, _account) {
-            account = _account;
-            new ethClient.AltExecCnsContract(account, cnsAddress);
-        }
-    });
+    ethClient.Account.create(baseUrl, password, function(err, _account) {
+        account = _account;
+        contract = new ethClient.AltExecCnsContract(account, CnsAddress);
+    }
 
     contract.call(password, ContractName, FunctionName, [ Args ], ABI, callback);
 
