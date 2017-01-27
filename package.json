@@ -1,6 +1,6 @@
 {
   "name": "eth-client",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "support library for Z.com Clound BlockChain and ConoHa BlockChain",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "browserify index.js -o dist/eth-client.js --s ethClient -g [ babelify --presets [ es2015 ] ] -p [ licensify --includePrivate ]",
     "minify": "uglifyjs dist/eth-client.js -c --comments=@license > dist/eth-client.min.js",
-    "build-dev": "watchify index.js -o dist/bundle.js --s ethClient -g [ babelify --presets [ es2015 ] ] -v"
+    "build-dev": "watchify index.js -o dist/bundle.js --poll=1000 --s ethClient -g [ babelify --presets [ es2015 ] ] -v"
   },
   "repository": {
     "type": "git",

@@ -6,7 +6,7 @@
  *   license: Apache-2.0 (http://opensource.org/licenses/Apache-2.0)
  *   author: GMO Internet, Inc.
  *   homepage: https://github.com/gmo-blockchain/eth-client#readme
- *   version: 0.1.3
+ *   version: 0.1.4
  *
  * asn1.js:
  *   license: MIT (http://opensource.org/licenses/MIT)
@@ -814,9 +814,8 @@ AltExecCnsContract.prototype.call = function (password, contractName, functionNa
             var cnsAddress = _this2.cnsAddress;
             var from = _this2.account.getAddress();
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
-            altParams.setTypesFromAbi(abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -845,9 +844,8 @@ AltExecCnsContract.prototype.sendTransaction = function (password, contractName,
             var cnsAddress = _this3.cnsAddress;
             var from = _this3.account.getAddress();
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
-            altParams.setTypesFromAbi(abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -876,9 +874,8 @@ AltExecCnsContract.prototype.getData = function (password, contractName, functio
             var cnsAddress = _this4.cnsAddress;
             var from = _this4.account.getAddress();
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
-            altParams.setTypesFromAbi(abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -908,10 +905,9 @@ AltExecCnsContract.prototype.sendData = function (password, contractName, functi
             var from = _this5.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
             altParams.setObject(objectId, dataHash);
-            altParams.setTypesFromAbi(abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -941,10 +937,9 @@ AltExecCnsContract.prototype.updateData = function (password, contractName, func
             var from = _this6.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
             altParams.setObject(objectId, dataHash);
-            altParams.setTypesFromAbi(abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -973,9 +968,8 @@ AltExecCnsContract.prototype.getFile = function (password, contractName, functio
             var cnsAddress = _this7.cnsAddress;
             var from = _this7.account.getAddress();
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
-            altParams.setTypesFromAbi(abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -1010,12 +1004,11 @@ AltExecCnsContract.prototype.sendFile = function (password, contractName, functi
             var from = _this8.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
 
             utils.hashFile(file).then(function (fileHash) {
                 altParams.setObject(objectId, dataHash, ethUtil.addHexPrefix(fileHash));
-                altParams.setTypesFromAbi(abi);
                 return Promise.resolve(altParams.getHashedParams());
             }).then(function (hash) {
                 return _this.account.sign(password, hash);
@@ -1050,12 +1043,11 @@ AltExecCnsContract.prototype.updateFile = function (password, contractName, func
             var cnsAddress = _this9.cnsAddress;
             var from = _this9.account.getAddress();
 
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params);
+            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
 
             utils.hashFile(file).then(function (fileHash) {
                 altParams.setObject(objectId, null, ethUtil.addHexPrefix(fileHash));
-                altParams.setTypesFromAbi(abi);
                 return Promise.resolve(altParams.getHashedParams());
             }).then(function (hash) {
                 return _this.account.sign(password, hash);
@@ -1114,18 +1106,16 @@ var utils = require('./utils'),
 
 var envTypes = ['address', 'bytes32', 'bytes32'];
 
-var AltExecCnsParams = function AltExecCnsParams(cnsAddress, contractName, functionName, params) {
+var AltExecCnsParams = function AltExecCnsParams(cnsAddress, contractName, functionName, params, abi, sign) {
     this.envParams = [cnsAddress, contractName, functionName];
     this.objectParams = [];
     this.optionalParams = params;
+    this.abi = abi;
+    if (sign) this.sign = sign;
 };
 
 AltExecCnsParams.prototype.getFunctionName = function () {
     return this.envParams[2];
-};
-
-AltExecCnsParams.prototype.getFrom = function () {
-    return this.from;
 };
 
 AltExecCnsParams.prototype.setSign = function (sign) {
@@ -1133,26 +1123,38 @@ AltExecCnsParams.prototype.setSign = function (sign) {
 };
 
 AltExecCnsParams.prototype.setObject = function (objectId, dataHash, fileHash) {
-    if (!(dataHash || fileHash)) throw 'no datHash or fileHash';
+    if (!(dataHash || fileHash)) throw new Error('no datHash and fileHash');
     this.objectParams[0] = ethUtil.addHexPrefix(coder.encodeParam('bytes32', objectId));
     this.objectParams[1] = dataHash;
     this.objectParams[2] = fileHash;
 };
 
-AltExecCnsParams.prototype.setTypesFromAbi = function (abi) {
-    var functionName = this.getFunctionName();
-
-    function matchesFunctionName(json) {
-        return json.name === functionName && json.type === 'function';
-    };
-    var funcJson = abi.filter(matchesFunctionName)[0];
-    if (!funcJson) throw 'no such function';
-    this.constant = funcJson.constant;
-    this.types = txutils._getTypesFromAbi(abi, this.getFunctionName());
+AltExecCnsParams.prototype.getFunctionInterface = function () {
+    return utils.getFunctionInterface(this.abi, this.getFunctionName());
 };
 
-AltExecCnsParams.prototype.getEncodedData = function () {
-    var types = this.types;
+AltExecCnsParams.prototype.getValidationErrorOfAbi = function (isGetObjectId) {
+    if (!this.types) {
+        var funcIF = this.getFunctionInterface();
+        if (!funcIF) return 'no such function';
+        this.constant = funcIF.constant;
+        this.types = txutils._getTypesFromAbi(this.abi, this.getFunctionName());
+    }
+
+    var params = this.getParamsForEncode();
+    if (params.length !== this.types.length) return 'abi does not match params';
+
+    if (isGetObjectId) {
+        if (!this.constant) return 'not constant function';
+        var outputs = utils.getOutputTypesFromAbi(this.abi, this.getFunctionName());
+
+        if (outputs.length != 1) return 'outputs is not one type';
+        if (outputs[0].indexOf('bytes32') < 0) return 'outputs is not bytes32';
+    }
+    return null;
+};
+
+AltExecCnsParams.prototype.getParamsForEncode = function () {
     var params = this.optionalParams;
     if (!this.constant) {
         params = [this.sign];
@@ -1161,13 +1163,29 @@ AltExecCnsParams.prototype.getEncodedData = function () {
         });
         params = params.concat(this.optionalParams);
     }
-    if (params.length !== types.length) throw 'invalid params';
+    return params;
+};
+
+AltExecCnsParams.prototype.getEncodedData = function () {
+    if (!this.types) {
+        var funcIF = this.getFunctionInterface();
+        this.constant = funcIF.constant;
+        this.types = txutils._getTypesFromAbi(this.abi, this.getFunctionName());
+    }
+
+    var types = this.types;
+    var params = this.getParamsForEncode();
+    if (params.length !== types.length) throw new Error('invalid params');
 
     return ethUtil.addHexPrefix(txutils._encodeFunctionTxData(this.getFunctionName(), types, params));
 };
 
 AltExecCnsParams.prototype.getHashedParams = function () {
-    if (!this.types) throw 'type is not set';
+    if (!this.types) {
+        var funcIF = this.getFunctionInterface();
+        this.constant = funcIF.constant;
+        this.types = txutils._getTypesFromAbi(this.abi, this.getFunctionName());
+    }
 
     var params = this.envParams;
     this.objectParams.map(function (p) {
@@ -1185,23 +1203,9 @@ AltExecCnsParams.prototype.getHashedParams = function () {
     return utils.hashBySolidityType(types, params);
 };
 
-AltExecCnsParams.prototype.recoverAddress = function (req) {
-    if (!req) throw 'no req provided';
-
+AltExecCnsParams.prototype.recoverAddress = function () {
     var hash = this.getHashedParams();
-    var params = this.envParams;
-    this.objectParams.map(function (p) {
-        if (p) params.push(p);
-    });
-    params = params.concat(this.optionalParams);
-
-    this.from = utils.recoverAddress(hash, this.sign);
-
-    req.log.sign = {
-        signature: this.sign,
-        signed_parameter_list: params,
-        recovered_address: this.from
-    };
+    return utils.recoverAddress(hash, this.sign);
 };
 
 AltExecCnsParams.prototype.getInput = function () {
@@ -1244,19 +1248,24 @@ var concatSign = function concatSign(signature) {
     return ethUtil.addHexPrefix(r.concat(s, v).toString("hex"));
 };
 
-var getOutputTypesFromAbi = function getOutputTypesFromAbi(abi, functionName) {
+var getFunctionInterface = function getFunctionInterface(abi, functionName) {
     function matchesFunctionName(json) {
         return json.name === functionName && json.type === 'function';
     }
+    return abi.filter(matchesFunctionName)[0];
+};
+Utils.getFunctionInterface = getFunctionInterface;
 
+var getOutputTypesFromAbi = function getOutputTypesFromAbi(abi, functionName) {
     function getTypes(json) {
         return json.type;
     }
 
-    var funcJson = abi.filter(matchesFunctionName)[0];
+    var funcIF = getFunctionInterface(abi, functionName);
 
-    return funcJson.outputs.map(getTypes);
+    return funcIF.outputs.map(getTypes);
 };
+Utils.getOutputTypesFromAbi = getOutputTypesFromAbi;
 
 Utils.hash = function () {
     var bytes = 256;
@@ -1379,10 +1388,6 @@ Utils.hashFile = function (file) {
         };
         loadNext();
     });
-};
-
-Utils.getZero = function () {
-    return '0x0000000000000000000000000000000000000000000000000000000000000000';
 };
 
 module.exports = Utils;
