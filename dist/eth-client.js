@@ -6,7 +6,7 @@
  *   license: Apache-2.0 (http://opensource.org/licenses/Apache-2.0)
  *   author: GMO Internet, Inc.
  *   homepage: https://github.com/gmo-blockchain/eth-client#readme
- *   version: 0.1.4
+ *   version: 0.1.5
  *
  * asn1.js:
  *   license: MIT (http://opensource.org/licenses/MIT)
@@ -525,6 +525,8 @@ module.exports = {
 },{"./lib/account":2,"./lib/alt-exec-cns-contract":3,"./lib/alt-exec-cns-params":4,"./lib/utils":5}],2:[function(require,module,exports){
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 /**
  * Copyright 2016 GMO Internet, Inc
  *
@@ -562,7 +564,6 @@ Account.create = function (baseUrl, password, callback) {
                 var account = new Account(baseUrl, ks);
                 callback(null, account);
             } catch (e) {
-                console.error(e);
                 callback(e);
             }
         });
@@ -570,8 +571,7 @@ Account.create = function (baseUrl, password, callback) {
 };
 
 Account.prototype.serialize = function () {
-    var jsonAccount = { keystore: this.keystore.serialize(), baseUrl: this.baseUrl };
-    return JSON.stringify(jsonAccount);
+    return JSON.stringify({ keystore: this.keystore.serialize(), baseUrl: this.baseUrl });
 };
 
 Account.deserialize = function (serializedAccount) {
@@ -602,21 +602,28 @@ Account.prototype.keyFromPassword = function (password) {
 };
 
 Account.prototype.sign = function (password, hash, callback) {
-    try {
-        var _this = this;
+    var _this2 = this;
 
-        var retPromise = _this.keyFromPassword(password).then(function (pwDerivedKey) {
-            return ethClientUtils.sign(_this.keystore, pwDerivedKey, hash, _this.getAddress());
-        });
-        if (typeof callback === 'function') {
-            retPromise.then(function (sign) {
-                callback(null, sign);
-            }).catch(function (err) {
-                callback(err);
+    try {
+        var _ret = function () {
+            var _this = _this2;
+            var retPromise = _this.keyFromPassword(password).then(function (pwDerivedKey) {
+                return ethClientUtils.sign(_this.keystore, pwDerivedKey, hash, _this.getAddress());
             });
-        } else {
-            return retPromise;
-        }
+            if (typeof callback === 'function') {
+                retPromise.then(function (sign) {
+                    callback(null, sign);
+                }).catch(function (err) {
+                    callback(err);
+                });
+            } else {
+                return {
+                    v: retPromise
+                };
+            }
+        }();
+
+        if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
     } catch (err) {
         callback(err);
     }
@@ -646,8 +653,7 @@ module.exports = Account;
 var utils = require('./utils'),
     ethUtil = require('ethereumjs-util'),
     AltExecCnsParams = require('./alt-exec-cns-params'),
-    request = require('superagent'),
-    Account = require('./account');
+    request = require('superagent');
 var MAX_FILE_SIZE = 20 * 1000 * 1000;
 
 var AltExecCnsContract = function AltExecCnsContract(account, cnsAddress) {
@@ -806,16 +812,10 @@ AltExecCnsContract.prototype.call = function (password, contractName, functionNa
     var _this2 = this;
 
     try {
-        var altParams;
-
         (function () {
             var url = _this2.account.baseUrl;
-            var keystore = _this2.account.keystore;
             var cnsAddress = _this2.cnsAddress;
-            var from = _this2.account.getAddress();
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -836,16 +836,10 @@ AltExecCnsContract.prototype.sendTransaction = function (password, contractName,
     var _this3 = this;
 
     try {
-        var altParams;
-
         (function () {
             var url = _this3.account.baseUrl;
-            var keystore = _this3.account.keystore;
             var cnsAddress = _this3.cnsAddress;
-            var from = _this3.account.getAddress();
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -866,16 +860,10 @@ AltExecCnsContract.prototype.getData = function (password, contractName, functio
     var _this4 = this;
 
     try {
-        var altParams;
-
         (function () {
             var url = _this4.account.baseUrl;
-            var keystore = _this4.account.keystore;
             var cnsAddress = _this4.cnsAddress;
-            var from = _this4.account.getAddress();
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -896,17 +884,11 @@ AltExecCnsContract.prototype.sendData = function (password, contractName, functi
     var _this5 = this;
 
     try {
-        var altParams;
-
         (function () {
             var url = _this5.account.baseUrl;
-            var keystore = _this5.account.keystore;
             var cnsAddress = _this5.cnsAddress;
-            var from = _this5.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
             altParams.setObject(objectId, dataHash);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
@@ -928,17 +910,11 @@ AltExecCnsContract.prototype.updateData = function (password, contractName, func
     var _this6 = this;
 
     try {
-        var altParams;
-
         (function () {
             var url = _this6.account.baseUrl;
-            var keystore = _this6.account.keystore;
             var cnsAddress = _this6.cnsAddress;
-            var from = _this6.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
             altParams.setObject(objectId, dataHash);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
@@ -960,16 +936,10 @@ AltExecCnsContract.prototype.getFile = function (password, contractName, functio
     var _this7 = this;
 
     try {
-        var altParams;
-
         (function () {
             var url = _this7.account.baseUrl;
-            var keystore = _this7.account.keystore;
             var cnsAddress = _this7.cnsAddress;
-            var from = _this7.account.getAddress();
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
             var hash = altParams.getHashedParams();
             var input = altParams.getInput();
 
@@ -990,22 +960,13 @@ AltExecCnsContract.prototype.sendFile = function (password, contractName, functi
     var _this8 = this;
 
     try {
-        var _this;
-
-        var altParams;
-
         (function () {
-            if (file.size > MAX_FILE_SIZE) throw 'file is too large';
-            _this = _this8;
-
+            if (file.size > MAX_FILE_SIZE) throw 'File too large';
+            var _this = _this8;
             var url = _this8.account.baseUrl;
-            var keystore = _this8.account.keystore;
             var cnsAddress = _this8.cnsAddress;
-            var from = _this8.account.getAddress();
             var dataHash = ethUtil.addHexPrefix(utils.hash(data));
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
             utils.hashFile(file).then(function (fileHash) {
                 altParams.setObject(objectId, dataHash, ethUtil.addHexPrefix(fileHash));
@@ -1013,8 +974,7 @@ AltExecCnsContract.prototype.sendFile = function (password, contractName, functi
             }).then(function (hash) {
                 return _this.account.sign(password, hash);
             }).then(function (sign) {
-                var input = altParams.getInput();
-                return requestPostFile(url, input, sign, data, file);
+                return requestPostFile(url, altParams.getInput(), sign, data, file);
             }).then(function (result) {
                 callback(null, result);
             }).catch(function (err) {
@@ -1030,21 +990,12 @@ AltExecCnsContract.prototype.updateFile = function (password, contractName, func
     var _this9 = this;
 
     try {
-        var _this;
-
-        var altParams;
-
         (function () {
             if (file.size > MAX_FILE_SIZE) throw 'file is too large';
-            _this = _this9;
-
+            var _this = _this9;
             var url = _this9.account.baseUrl;
-            var keystore = _this9.account.keystore;
             var cnsAddress = _this9.cnsAddress;
-            var from = _this9.account.getAddress();
-
-            altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
-
+            var altParams = new AltExecCnsParams(cnsAddress, contractName, functionName, params, abi);
 
             utils.hashFile(file).then(function (fileHash) {
                 altParams.setObject(objectId, null, ethUtil.addHexPrefix(fileHash));
@@ -1052,8 +1003,7 @@ AltExecCnsContract.prototype.updateFile = function (password, contractName, func
             }).then(function (hash) {
                 return _this.account.sign(password, hash);
             }).then(function (sign) {
-                var input = altParams.getInput();
-                return requestPutFile(url, input, sign, file);
+                return requestPutFile(url, altParams.getInput(), sign, file);
             }).then(function (result) {
                 callback(null, result);
             }).catch(function (err) {
@@ -1080,7 +1030,7 @@ AltExecCnsContract.prototype.getTransactionReceipt = function (txHash, callback)
 
 module.exports = AltExecCnsContract;
 
-},{"./account":2,"./alt-exec-cns-params":4,"./utils":5,"ethereumjs-util":251,"superagent":318}],4:[function(require,module,exports){
+},{"./alt-exec-cns-params":4,"./utils":5,"ethereumjs-util":251,"superagent":318}],4:[function(require,module,exports){
 'use strict';
 
 /**
@@ -1148,21 +1098,21 @@ AltExecCnsParams.prototype.getValidationErrorOfAbi = function (isGetObjectId) {
         if (!this.constant) return 'not constant function';
         var outputs = utils.getOutputTypesFromAbi(this.abi, this.getFunctionName());
 
-        if (outputs.length != 1) return 'outputs is not one type';
+        if (outputs.length !== 1) return 'outputs is not one type';
         if (outputs[0].indexOf('bytes32') < 0) return 'outputs is not bytes32';
     }
     return null;
 };
 
 AltExecCnsParams.prototype.getParamsForEncode = function () {
-    var params = this.optionalParams;
+    var params = [];
     if (!this.constant) {
-        params = [this.sign];
+        params = params.concat(this.sign);
         this.objectParams.map(function (p) {
             if (p) params.push(p);
         });
-        params = params.concat(this.optionalParams);
     }
+    params = params.concat(this.optionalParams);
     return params;
 };
 
@@ -1199,13 +1149,11 @@ AltExecCnsParams.prototype.getHashedParams = function () {
     } else {
         types = types.concat(this.types.slice(1));
     }
-
     return utils.hashBySolidityType(types, params);
 };
 
 AltExecCnsParams.prototype.recoverAddress = function () {
-    var hash = this.getHashedParams();
-    return utils.recoverAddress(hash, this.sign);
+    return utils.recoverAddress(this.getHashedParams(), this.sign);
 };
 
 AltExecCnsParams.prototype.getInput = function () {
@@ -1228,7 +1176,6 @@ module.exports = AltExecCnsParams;
 
 var ethUtil = require('ethereumjs-util'),
     signing = require('eth-lightwallet').signing,
-    txutils = require('eth-lightwallet').txutils,
     coder = require('web3/lib/solidity/coder'),
     SHA3 = require('keccakjs'),
     web3Utils = require('web3/lib/utils/utils');
@@ -1245,7 +1192,7 @@ var concatSign = function concatSign(signature) {
     r = new Buffer(r.toTwos(256).toArray('be', 32)).toString('hex');
     s = new Buffer(s.toTwos(256).toArray('be', 32)).toString('hex');
     v = ethUtil.stripHexPrefix(ethUtil.intToHex(v));
-    return ethUtil.addHexPrefix(r.concat(s, v).toString("hex"));
+    return ethUtil.addHexPrefix(r.concat(s, v).toString('hex'));
 };
 
 var getFunctionInterface = function getFunctionInterface(abi, functionName) {
@@ -1262,7 +1209,6 @@ var getOutputTypesFromAbi = function getOutputTypesFromAbi(abi, functionName) {
     }
 
     var funcIF = getFunctionInterface(abi, functionName);
-
     return funcIF.outputs.map(getTypes);
 };
 Utils.getOutputTypesFromAbi = getOutputTypesFromAbi;
@@ -1275,12 +1221,12 @@ Utils.hash = function () {
         if (a) {
             h.update(ethUtil.toBuffer(a));
         }
-    };
+    }
     return h.digest('hex');
 };
 
 Utils.hashBySolidityType = function (types, params) {
-    if (!types || !params || types.length != params.length) throw new Error('invalid parameters');
+    if (!types || !params || types.length !== params.length) throw new Error('Invalid parameters');
 
     var getParam = function getParam(type, param) {
         var p = coder.encodeParam(type, param);
@@ -1292,8 +1238,8 @@ Utils.hashBySolidityType = function (types, params) {
         }
         var size = void 0;
         if (type === 'bytes') {
-            var _size = param.length;
-            return p.substr(128, _size - 2);
+            size = param.length;
+            return p.substr(128, size - 2);
         } else if (type === 'string') {
             // string はdynamic length のため
             return web3Utils.fromUtf8(param).substr(2);
@@ -1325,7 +1271,7 @@ Utils.hashBySolidityType = function (types, params) {
         return buffer;
     };
 
-    var hash;
+    var hash = void 0;
     for (var i = 0; i < types.length; i++) {
         var h = new SHA3(256);
         if (hash) {
@@ -1359,10 +1305,9 @@ Utils.hashFile = function (file) {
             chunkSize = 1024 * 1024 * 2,
             // Read in chunks of 2MB
         chunks = Math.ceil(file.size / chunkSize),
-            currentChunk = 0,
-            h = new SHA3(256);
-
-        var fileReader = new FileReader();
+            h = new SHA3(256),
+            fileReader = new FileReader();
+        var currentChunk = 0;
 
         fileReader.onload = function (e) {
             h.update(new Buffer(e.target.result, 'hex')); // Append array buffer
@@ -1373,7 +1318,7 @@ Utils.hashFile = function (file) {
             } else {
                 var hash = h.digest('hex');
                 res(hash);
-            };
+            }
         };
 
         fileReader.onerror = function () {
@@ -1381,11 +1326,11 @@ Utils.hashFile = function (file) {
         };
 
         function loadNext() {
-            var start = currentChunk * chunkSize,
-                end = start + chunkSize >= file.size ? file.size : start + chunkSize;
-
+            var start = currentChunk * chunkSize;
+            var end = start + chunkSize >= file.size ? file.size : start + chunkSize;
             fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
-        };
+        }
+
         loadNext();
     });
 };
