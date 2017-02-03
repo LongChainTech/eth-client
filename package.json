@@ -1,6 +1,6 @@
 {
   "name": "eth-client",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "support library for Z.com Clound BlockChain and ConoHa BlockChain",
   "main": "index.js",
   "directories": {

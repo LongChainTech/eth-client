@@ -6,7 +6,7 @@
  *   license: Apache-2.0 (http://opensource.org/licenses/Apache-2.0)
  *   author: GMO Internet, Inc.
  *   homepage: https://github.com/gmo-blockchain/eth-client#readme
- *   version: 0.1.5
+ *   version: 0.1.6
  *
  * asn1.js:
  *   license: MIT (http://opensource.org/licenses/MIT)
@@ -777,11 +777,18 @@ var requestGetFile = function requestGetFile(baseUrl, input, sign) {
     return new Promise(function (resolve, reject) {
         request.get(baseUrl + '/alt/cns/file').query({ input: input, sign: sign }).responseType('blob').end(function (err, res) {
             if (err) {
-                if (res && res.body && res.body.code === 1) {
-                    reject(res.body.message);
-                } else {
-                    reject(err);
-                }
+                (function () {
+                    var reader = new FileReader();
+                    reader.addEventListener('loadend', function () {
+                        var resBody = JSON.parse(reader.result);
+                        if (resBody && resBody.code === 1) {
+                            reject(resBody.message);
+                        } else {
+                            reject(err);
+                        }
+                    });
+                    reader.readAsText(res.xhr.response);
+                })();
             } else {
                 var fileName = res.header['content-disposition'].match(new RegExp('filename=\"(.+)\"'))[1];
                 var type = res.header['content-type'];
@@ -1162,7 +1169,7 @@ AltExecCnsParams.prototype.getInput = function () {
     input.contractName = this.envParams[1];
     input.functionName = this.envParams[2];
     input.params = this.optionalParams;
-    input.objectId = this.objectParams[0];
+    if (this.objectParams[0]) input.objectId = this.objectParams[0];
     if (this.objectParams[1]) input.dataHash = this.objectParams[1];
     if (this.objectParams[2]) input.fileHash = this.objectParams[2];
     return input;
