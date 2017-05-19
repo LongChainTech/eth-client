@@ -6,7 +6,7 @@
  *   license: Apache-2.0 (http://opensource.org/licenses/Apache-2.0)
  *   author: GMO Internet, Inc.
  *   homepage: https://github.com/gmo-blockchain/eth-client#readme
- *   version: 0.1.6
+ *   version: 0.1.7
  *
  * asn1.js:
  *   license: MIT (http://opensource.org/licenses/MIT)
@@ -1101,6 +1101,10 @@ AltExecCnsParams.prototype.getValidationErrorOfAbi = function (isGetObjectId) {
     var params = this.getParamsForEncode();
     if (params.length !== this.types.length) return 'abi does not match params';
 
+    if (!this.constant) {
+        if (this.types[0] !== 'bytes') return 'no sign';
+    }
+
     if (isGetObjectId) {
         if (!this.constant) return 'not constant function';
         var outputs = utils.getOutputTypesFromAbi(this.abi, this.getFunctionName());
@@ -1168,7 +1172,18 @@ AltExecCnsParams.prototype.getInput = function () {
     input.cnsAddress = this.envParams[0];
     input.contractName = this.envParams[1];
     input.functionName = this.envParams[2];
-    input.params = this.optionalParams;
+
+    var convertArrayToJson = function convertArrayToJson(val) {
+        if (!Array.isArray(val)) return val;
+        return val.map(function (v, i) {
+            var ret = {};
+            ret[i] = convertArrayToJson(v);
+            return ret;
+        });
+    };
+
+    if (!this.constant) input.params = this.optionalParams;else input.params = convertArrayToJson(this.optionalParams);
+
     if (this.objectParams[0]) input.objectId = this.objectParams[0];
     if (this.objectParams[1]) input.dataHash = this.objectParams[1];
     if (this.objectParams[2]) input.fileHash = this.objectParams[2];
