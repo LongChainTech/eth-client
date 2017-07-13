@@ -1,6 +1,6 @@
 {
   "name": "eth-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "support library for Z.com Clound BlockChain and ConoHa BlockChain",
   "main": "index.js",
   "directories": {
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gmo-blockchain/eth-client.git"
+    "url": "git+https://github.com/zcom-cloud-blockchain/eth-client.git"
   },
   "keywords": [
     "blockchain",
@@ -22,9 +22,9 @@
   "author": "GMO Internet, Inc.",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/gmo-blockchain/eth-client/issues"
+    "url": "https://github.com/zcom-cloud-blockchain/eth-client/issues"
   },
-  "homepage": "https://github.com/gmo-blockchain/eth-client#readme",
+  "homepage": "https://github.com/zcom-cloud-blockchain/eth-client#readme",
   "dependencies": {
     "babel-plugin-check-es2015-constants": "^6.22.0",
     "babel-plugin-transform-es2015-arrow-functions": "^6.22.0",
