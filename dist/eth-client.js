@@ -5,8 +5,8 @@
  * eth-client:
  *   license: Apache-2.0 (http://opensource.org/licenses/Apache-2.0)
  *   author: GMO Internet, Inc.
- *   homepage: https://github.com/gmo-blockchain/eth-client#readme
- *   version: 0.2.0
+ *   homepage: https://github.com/zcom-cloud-blockchain/eth-client#readme
+ *   version: 0.2.1
  *
  * asn1.js:
  *   license: MIT (http://opensource.org/licenses/MIT)
